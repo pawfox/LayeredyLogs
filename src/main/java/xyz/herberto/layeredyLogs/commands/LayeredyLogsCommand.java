@@ -24,7 +24,7 @@ public class LayeredyLogsCommand extends BaseCommand {
     public void reload(CommandSender sender) {
         LayeredyLogs.getInstance().reloadConfig();
 
-        sender.sendMessage(LEGACY.serialize(Component.text("&aReloaded the Layeredy Logs config!")));
+        sender.sendMessage(LEGACY.deserialize("&aReloaded the Layeredy Logs config!"));
     }
 
 }

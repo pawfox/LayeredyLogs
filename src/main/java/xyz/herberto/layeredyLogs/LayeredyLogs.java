@@ -2,18 +2,25 @@ package xyz.herberto.layeredyLogs;
 
 import co.aikar.commands.PaperCommandManager;
 import lombok.Getter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
 import org.bukkit.plugin.java.JavaPlugin;
 import xyz.herberto.layeredyLogs.commands.LayeredyLogsCommand;
+import xyz.herberto.layeredyLogs.logging.LayeredyLogAppender;
 
 import java.util.Arrays;
 
 public final class LayeredyLogs extends JavaPlugin {
-    @Getter public static LayeredyLogs instance;
-    @Getter public static String loggingToken;
+    @Getter
+    private static LayeredyLogs instance;
+    private static String loggingToken;
+    private LayeredyLogAppender layeredyAppender;
 
     @Override
     public void onEnable() {
         instance = this;
+
+        saveDefaultConfig();
 
         PaperCommandManager commandManager = new PaperCommandManager(this);
         commandManager.enableUnstableAPI("help");
@@ -29,10 +36,20 @@ public final class LayeredyLogs extends JavaPlugin {
             getLogger().warning("Your server will NOT send logs until it is configured with a valid token.");
         }
 
+        layeredyAppender = new LayeredyLogAppender(
+                loggingToken,
+                loggingToken,
+                "minecraft-server"
+        );
+        layeredyAppender.install();
+
     }
+
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        if (layeredyAppender != null) {
+            layeredyAppender.uninstall();
+        }
     }
 }
