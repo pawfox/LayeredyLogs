@@ -17,9 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 
 public class LayeredyLogAppender extends AbstractAppender {
+
+    private static final Pattern ANSI_ESCAPE = Pattern.compile("\\u001B\\[[;\\d]*[ -/]*[@-~]");
+    private static final Pattern MINECRAFT_COLOR = Pattern.compile("(?i)\u00A7[0-9A-FK-ORX]");
 
     private static final String ENDPOINT = "https://app.layeredy.com/api/logs/ingest";
     private static final int BATCH_SIZE = 25;
@@ -70,13 +74,13 @@ public class LayeredyLogAppender extends AbstractAppender {
                 Instant.ofEpochMilli(event.getTimeMillis())));
         line.addProperty("level", event.getLevel().toString().toLowerCase());
         line.addProperty("service", serviceName);
-        line.addProperty("message", event.getMessage().getFormattedMessage());
+        line.addProperty("message", stripColors(event.getMessage().getFormattedMessage()));
 
         JsonObject attributes = new JsonObject();
         attributes.addProperty("logger", event.getLoggerName());
         attributes.addProperty("thread", event.getThreadName());
         if (event.getThrown() != null) {
-            attributes.addProperty("exception", event.getThrown().toString());
+            attributes.addProperty("exception", stripColors(event.getThrown().toString()));
         }
         line.add("attributes", attributes);
 
@@ -85,6 +89,14 @@ public class LayeredyLogAppender extends AbstractAppender {
         if (queue.size() >= BATCH_SIZE) {
             flushBatch(drainAll());
         }
+    }
+
+    private static String stripColors(String message) {
+        if (message == null || message.isEmpty()) {
+            return message;
+        }
+        String stripped = ANSI_ESCAPE.matcher(message).replaceAll("");
+        return MINECRAFT_COLOR.matcher(stripped).replaceAll("");
     }
 
     private void flushLoop() {
