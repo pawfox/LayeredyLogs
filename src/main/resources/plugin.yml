@@ -1,0 +1,8 @@
+name: LayeredyLogs
+version: '${version}'
+
+main: xyz.herberto.layeredyLogs.LayeredyLogs
+api-version: '26.2'
+load: POSTWORLD
+
+authors: [ herberto ]
